@@ -129,10 +129,12 @@ def generate_cdp_modules(project_name: str):
             with open(os.path.join(stub_dir, "mod.rs"), "w", encoding="utf-8") as f:
                 f.write(f"//! Stub for {stub} domain\n")
                 f.write("pub type NodeId = i32;\npub type FrameId = String;\n")
+            lib_rs_content.append(f'#[cfg(feature = "{stub}")]')
             lib_rs_content.append(f"pub mod {stub};")
 
     for domain in schema.get("domains", []):
         d_name = domain.get("domain")
+        lib_rs_content.append(f'#[cfg(feature = "{d_name.lower()}")]')
         lib_rs_content.append(f"pub mod {d_name.lower()};")
         domain_dir = os.path.join(src_dir, d_name.lower())
         os.makedirs(domain_dir, exist_ok=True)
@@ -222,7 +224,8 @@ def update_cargo_metadata(project_name):
         "repository": f'"https://github.com/AzzoDude/{project_name}"',
         "readme": '"README.md"',
         "keywords": '["cdp", "browser", "automation", "protocol"]',
-        "categories": '["development-tools", "web-programming"]'
+        "categories": '["development-tools", "web-programming"]',
+        "version": '"0.1.1"'
     }
 
     lines = content.splitlines()
@@ -245,9 +248,14 @@ def update_cargo_metadata(project_name):
                         new_lines.append(f"{key} = {value}")
                 in_package = False
             else:
-                key = line.split("=")[0].strip()
-                if key in metadata:
-                    added_metadata.add(key)
+                key_part = line.split("=")[0].strip()
+                if key_part in metadata:
+                    if key_part == "version":
+                        # Always force update version to 0.1.1 for this fix
+                        new_lines.append(f'version = "0.1.1"')
+                        added_metadata.add(key_part)
+                        continue
+                    added_metadata.add(key_part)
         
         new_lines.append(line)
 
@@ -255,6 +263,31 @@ def update_cargo_metadata(project_name):
         for key, value in metadata.items():
             if key not in added_metadata:
                 new_lines.append(f"{key} = {value}")
+
+    # Feature generation logic
+    json_path = os.path.join("..", "js_protocol.json")
+    if os.path.exists(json_path):
+        with open(json_path, "r", encoding="utf-8") as f:
+            schema = json.load(f)
+        domains = [d.get("domain").lower() for d in schema.get("domains", [])]
+        stubs = ["dom", "page", "network", "target"]
+        all_features = sorted(list(set(domains + stubs)))
+        
+        # Remove existing [features] if it exists to regenerate
+        processed_lines = []
+        skip = False
+        for l in new_lines:
+            if l.strip() == "[features]": skip = True
+            elif skip and l.startswith("["): skip = False
+            if not skip: processed_lines.append(l)
+        new_lines = processed_lines
+
+        new_lines.append("\n[features]")
+        new_lines.append('default = ["full"]')
+        full_deps = ", ".join([f'"{f}"' for f in all_features])
+        new_lines.append(f'full = [{full_deps}]')
+        for f in all_features:
+            new_lines.append(f'{f} = []')
 
     if not any("[profile.release]" in l for l in new_lines):
         new_lines.append('\n[profile.release]')
@@ -319,7 +352,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-{project_name} = "0.1.0"
+js-protocol = {{ version = "0.1.1", features = ["full"] }}
 serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
 ```

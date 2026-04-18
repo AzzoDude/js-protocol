@@ -4,7 +4,7 @@ description = "Generated Rust types for js_protocol.json"
 license = "MIT"
 repository = "https://github.com/AzzoDude/js-protocol"
 name = "js-protocol"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 readme = "README.md"
 keywords = ["cdp", "browser", "automation", "protocol"]
@@ -21,3 +21,17 @@ lto = "fat"
 codegen-units = 1
 panic = "abort"
 strip = true
+
+[features]
+default = ["full"]
+full = ["console", "debugger", "dom", "heapprofiler", "network", "page", "profiler", "runtime", "schema", "target"]
+console = []
+debugger = []
+dom = []
+heapprofiler = []
+network = []
+page = []
+profiler = []
+runtime = []
+schema = []
+target = []
