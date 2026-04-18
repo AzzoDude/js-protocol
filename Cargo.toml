@@ -6,6 +6,9 @@ repository = "https://github.com/AzzoDude/js-protocol"
 name = "js-protocol"
 version = "0.1.0"
 edition = "2024"
+readme = "README.md"
+keywords = ["cdp", "browser", "automation", "protocol"]
+categories = ["development-tools", "web-programming"]
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

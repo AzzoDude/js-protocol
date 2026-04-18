@@ -212,27 +212,60 @@ def generate_cdp_modules(project_name: str):
 def update_cargo_metadata(project_name):
     project_path = ".."
     path = os.path.join(project_path, "Cargo.toml")
-    with open(path, "r", encoding="utf-8") as f: lines = f.readlines()
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
     
-    new_lines = []
-    if not any("authors =" in l for l in lines):
-        for line in lines:
-            new_lines.append(line)
-            if line.strip() == "[package]":
-                new_lines.append(f'authors = ["AzzoDude"]\n')
-                new_lines.append(f'description = "Generated Rust types for the Chrome DevTools JS Protocol"\n')
-                new_lines.append(f'license = "MIT"\n')
-                new_lines.append(f'repository = "https://github.com/AzzoDude/{project_name}"\n')
-                new_lines.append(f'readme = "README.md"\n')
-                new_lines.append(f'keywords = ["cdp", "browser", "automation", "protocol"]\n')
-                new_lines.append(f'categories = ["development-tools", "web-programming"]\n')
-    else:
-        new_lines = lines
-            
-    if not any("[profile.release]" in l for l in lines):
-        new_lines.append('\n[profile.release]\nopt-level = 3\nlto = "fat"\ncodegen-units = 1\npanic = "abort"\nstrip = true\n')
+    metadata = {
+        "authors": '["AzzoDude"]',
+        "description": '"Generated Rust types and commands for the Chrome DevTools JS Protocol"',
+        "license": '"MIT"',
+        "repository": f'"https://github.com/AzzoDude/{project_name}"',
+        "readme": '"README.md"',
+        "keywords": '["cdp", "browser", "automation", "protocol"]',
+        "categories": '["development-tools", "web-programming"]'
+    }
 
-    with open(path, "w", encoding="utf-8") as f: f.writelines(new_lines)
+    lines = content.splitlines()
+    new_lines = []
+    
+    in_package = False
+    added_metadata = set()
+    
+    for line in lines:
+        if line.strip() == "[package]":
+            in_package = True
+            new_lines.append(line)
+            continue
+        
+        if in_package:
+            if line.startswith("[") or line.strip() == "":
+                # End of package section or empty line, add missing metadata
+                for key, value in metadata.items():
+                    if key not in added_metadata:
+                        new_lines.append(f"{key} = {value}")
+                in_package = False
+            else:
+                key = line.split("=")[0].strip()
+                if key in metadata:
+                    added_metadata.add(key)
+        
+        new_lines.append(line)
+
+    if in_package:
+        for key, value in metadata.items():
+            if key not in added_metadata:
+                new_lines.append(f"{key} = {value}")
+
+    if not any("[profile.release]" in l for l in new_lines):
+        new_lines.append('\n[profile.release]')
+        new_lines.append('opt-level = 3')
+        new_lines.append('lto = "fat"')
+        new_lines.append('codegen-units = 1')
+        new_lines.append('panic = "abort"')
+        new_lines.append('strip = true')
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(new_lines) + "\n")
 
 def update_gitignore():
     project_path = ".."
