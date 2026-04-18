@@ -29,3 +29,19 @@ js-protocol = "0.1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ```
+
+## 🛠 Usage Example
+
+```rust
+use js_protocol::runtime::{EvaluateParams, RemoteObject};
+
+fn main() {
+    // Example: Constructing a 'Runtime.evaluate' request
+    let params = EvaluateParams {
+        expression: "console.log('Hello from Rust!')".to_string(),
+        ..Default::default()
+    };
+
+    println!("Serialized request: {:?}", serde_json::to_string(&params));
+}
+```

@@ -234,6 +234,28 @@ def update_cargo_metadata(project_name):
 
     with open(path, "w", encoding="utf-8") as f: f.writelines(new_lines)
 
+def update_gitignore():
+    project_path = ".."
+    path = os.path.join(project_path, ".gitignore")
+    
+    required_ignores = ["/target/", "Cargo.lock"]
+    existing_lines = []
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            existing_lines = [l.strip() for l in f.readlines()]
+            
+    # Remove generic 'target/' if it exists to avoid ignoring 'src/target'
+    if "target/" in existing_lines:
+        existing_lines.remove("target/")
+        
+    for item in required_ignores:
+        if item not in existing_lines:
+            existing_lines.append(item)
+            
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(existing_lines) + "\n")
+
+
 def generate_readme(project_name):
     project_path = ".."
     path = os.path.join(project_path, "README.md")
@@ -268,6 +290,22 @@ Add this to your `Cargo.toml`:
 serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
 ```
+
+## 🛠 Usage Example
+
+```rust
+use js_protocol::runtime::{{EvaluateParams, RemoteObject}};
+
+fn main() {{
+    // Example: Constructing a 'Runtime.evaluate' request
+    let params = EvaluateParams {{
+        expression: "console.log('Hello from Rust!')".to_string(),
+        ..Default::default()
+    }};
+
+    println!("Serialized request: {{:?}}", serde_json::to_string(&params));
+}}
+```
 """
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -287,6 +325,8 @@ if __name__ == "__main__":
     if args.release:
         print(f"Updating Cargo metadata for {args.name}...")
         update_cargo_metadata(args.name)
+        print("Updating .gitignore...")
+        update_gitignore()
 
     print(f"Generating README for {args.name}...")
     generate_readme(args.name)
