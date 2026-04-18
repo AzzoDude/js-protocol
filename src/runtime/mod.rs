@@ -1,11 +1,11 @@
+use serde::{Serialize, Deserialize};
+use serde_json::Value as JsonValue;
+
 //! Runtime domain exposes JavaScript runtime by means of remote evaluation and mirror objects.
 //! Evaluation results are returned as mirror object that expose object type, string representation
 //! and unique identifier that can be used for further object reference. Original objects are
 //! maintained in memory unless they are either explicitly released or are released along with the
 //! other objects in their object group.
-
-use serde::{Serialize, Deserialize};
-use serde_json::Value as JsonValue;
 
 /// Unique script identifier.
 
@@ -477,6 +477,13 @@ pub struct AwaitPromiseReturns {
     pub exceptionDetails: Option<ExceptionDetails>,
 }
 
+impl AwaitPromiseParams { pub const METHOD: &'static str = "Runtime.awaitPromise"; }
+
+impl crate::CdpCommand for AwaitPromiseParams {
+    const METHOD: &'static str = "Runtime.awaitPromise";
+    type Response = AwaitPromiseReturns;
+}
+
 /// Calls function with given declaration on the given object. Object group of the result is
 /// inherited from the target object.
 
@@ -564,6 +571,13 @@ pub struct CallFunctionOnReturns {
     pub exceptionDetails: Option<ExceptionDetails>,
 }
 
+impl CallFunctionOnParams { pub const METHOD: &'static str = "Runtime.callFunctionOn"; }
+
+impl crate::CdpCommand for CallFunctionOnParams {
+    const METHOD: &'static str = "Runtime.callFunctionOn";
+    type Response = CallFunctionOnReturns;
+}
+
 /// Compiles expression.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -598,6 +612,43 @@ pub struct CompileScriptReturns {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exceptionDetails: Option<ExceptionDetails>,
+}
+
+impl CompileScriptParams { pub const METHOD: &'static str = "Runtime.compileScript"; }
+
+impl crate::CdpCommand for CompileScriptParams {
+    const METHOD: &'static str = "Runtime.compileScript";
+    type Response = CompileScriptReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DisableParams {}
+
+impl DisableParams { pub const METHOD: &'static str = "Runtime.disable"; }
+
+impl crate::CdpCommand for DisableParams {
+    const METHOD: &'static str = "Runtime.disable";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DiscardConsoleEntriesParams {}
+
+impl DiscardConsoleEntriesParams { pub const METHOD: &'static str = "Runtime.discardConsoleEntries"; }
+
+impl crate::CdpCommand for DiscardConsoleEntriesParams {
+    const METHOD: &'static str = "Runtime.discardConsoleEntries";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EnableParams {}
+
+impl EnableParams { pub const METHOD: &'static str = "Runtime.enable"; }
+
+impl crate::CdpCommand for EnableParams {
+    const METHOD: &'static str = "Runtime.enable";
+    type Response = crate::EmptyReturns;
 }
 
 /// Evaluates expression on global object.
@@ -702,6 +753,13 @@ pub struct EvaluateReturns {
     pub exceptionDetails: Option<ExceptionDetails>,
 }
 
+impl EvaluateParams { pub const METHOD: &'static str = "Runtime.evaluate"; }
+
+impl crate::CdpCommand for EvaluateParams {
+    const METHOD: &'static str = "Runtime.evaluate";
+    type Response = EvaluateReturns;
+}
+
 /// Returns the isolate id.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -710,6 +768,16 @@ pub struct GetIsolateIdReturns {
     /// The isolate id.
 
     pub id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct GetIsolateIdParams {}
+
+impl GetIsolateIdParams { pub const METHOD: &'static str = "Runtime.getIsolateId"; }
+
+impl crate::CdpCommand for GetIsolateIdParams {
+    const METHOD: &'static str = "Runtime.getIsolateId";
+    type Response = GetIsolateIdReturns;
 }
 
 /// Returns the JavaScript heap usage.
@@ -730,6 +798,16 @@ pub struct GetHeapUsageReturns {
     /// Size in bytes of backing storage for array buffers and external strings.
 
     pub backingStorageSize: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct GetHeapUsageParams {}
+
+impl GetHeapUsageParams { pub const METHOD: &'static str = "Runtime.getHeapUsage"; }
+
+impl crate::CdpCommand for GetHeapUsageParams {
+    const METHOD: &'static str = "Runtime.getHeapUsage";
+    type Response = GetHeapUsageReturns;
 }
 
 /// Returns properties of a given object. Object group of the result is inherited from the target
@@ -784,6 +862,13 @@ pub struct GetPropertiesReturns {
     pub exceptionDetails: Option<ExceptionDetails>,
 }
 
+impl GetPropertiesParams { pub const METHOD: &'static str = "Runtime.getProperties"; }
+
+impl crate::CdpCommand for GetPropertiesParams {
+    const METHOD: &'static str = "Runtime.getProperties";
+    type Response = GetPropertiesReturns;
+}
+
 /// Returns all let, const and class variables from global scope.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -802,6 +887,13 @@ pub struct GlobalLexicalScopeNamesParams {
 pub struct GlobalLexicalScopeNamesReturns {
 
     pub names: Vec<String>,
+}
+
+impl GlobalLexicalScopeNamesParams { pub const METHOD: &'static str = "Runtime.globalLexicalScopeNames"; }
+
+impl crate::CdpCommand for GlobalLexicalScopeNamesParams {
+    const METHOD: &'static str = "Runtime.globalLexicalScopeNames";
+    type Response = GlobalLexicalScopeNamesReturns;
 }
 
 
@@ -826,6 +918,13 @@ pub struct QueryObjectsReturns {
     pub objects: RemoteObject,
 }
 
+impl QueryObjectsParams { pub const METHOD: &'static str = "Runtime.queryObjects"; }
+
+impl crate::CdpCommand for QueryObjectsParams {
+    const METHOD: &'static str = "Runtime.queryObjects";
+    type Response = QueryObjectsReturns;
+}
+
 /// Releases remote object with given id.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -836,6 +935,13 @@ pub struct ReleaseObjectParams {
     pub objectId: RemoteObjectId,
 }
 
+impl ReleaseObjectParams { pub const METHOD: &'static str = "Runtime.releaseObject"; }
+
+impl crate::CdpCommand for ReleaseObjectParams {
+    const METHOD: &'static str = "Runtime.releaseObject";
+    type Response = crate::EmptyReturns;
+}
+
 /// Releases all remote objects that belong to a given group.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -844,6 +950,23 @@ pub struct ReleaseObjectGroupParams {
     /// Symbolic object group name.
 
     pub objectGroup: String,
+}
+
+impl ReleaseObjectGroupParams { pub const METHOD: &'static str = "Runtime.releaseObjectGroup"; }
+
+impl crate::CdpCommand for ReleaseObjectGroupParams {
+    const METHOD: &'static str = "Runtime.releaseObjectGroup";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct RunIfWaitingForDebuggerParams {}
+
+impl RunIfWaitingForDebuggerParams { pub const METHOD: &'static str = "Runtime.runIfWaitingForDebugger"; }
+
+impl crate::CdpCommand for RunIfWaitingForDebuggerParams {
+    const METHOD: &'static str = "Runtime.runIfWaitingForDebugger";
+    type Response = crate::EmptyReturns;
 }
 
 /// Runs script with given id in a given context.
@@ -901,6 +1024,13 @@ pub struct RunScriptReturns {
     pub exceptionDetails: Option<ExceptionDetails>,
 }
 
+impl RunScriptParams { pub const METHOD: &'static str = "Runtime.runScript"; }
+
+impl crate::CdpCommand for RunScriptParams {
+    const METHOD: &'static str = "Runtime.runScript";
+    type Response = RunScriptReturns;
+}
+
 /// Enables or disables async call stacks tracking.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -912,6 +1042,13 @@ pub struct SetAsyncCallStackDepthParams {
     pub maxDepth: i64,
 }
 
+impl SetAsyncCallStackDepthParams { pub const METHOD: &'static str = "Runtime.setAsyncCallStackDepth"; }
+
+impl crate::CdpCommand for SetAsyncCallStackDepthParams {
+    const METHOD: &'static str = "Runtime.setAsyncCallStackDepth";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -920,12 +1057,36 @@ pub struct SetCustomObjectFormatterEnabledParams {
     pub enabled: bool,
 }
 
+impl SetCustomObjectFormatterEnabledParams { pub const METHOD: &'static str = "Runtime.setCustomObjectFormatterEnabled"; }
+
+impl crate::CdpCommand for SetCustomObjectFormatterEnabledParams {
+    const METHOD: &'static str = "Runtime.setCustomObjectFormatterEnabled";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SetMaxCallStackSizeToCaptureParams {
 
     pub size: u64,
+}
+
+impl SetMaxCallStackSizeToCaptureParams { pub const METHOD: &'static str = "Runtime.setMaxCallStackSizeToCapture"; }
+
+impl crate::CdpCommand for SetMaxCallStackSizeToCaptureParams {
+    const METHOD: &'static str = "Runtime.setMaxCallStackSizeToCapture";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TerminateExecutionParams {}
+
+impl TerminateExecutionParams { pub const METHOD: &'static str = "Runtime.terminateExecution"; }
+
+impl crate::CdpCommand for TerminateExecutionParams {
+    const METHOD: &'static str = "Runtime.terminateExecution";
+    type Response = crate::EmptyReturns;
 }
 
 /// If executionContextId is empty, adds binding with the given name on the
@@ -960,6 +1121,13 @@ pub struct AddBindingParams {
     pub executionContextName: Option<String>,
 }
 
+impl AddBindingParams { pub const METHOD: &'static str = "Runtime.addBinding"; }
+
+impl crate::CdpCommand for AddBindingParams {
+    const METHOD: &'static str = "Runtime.addBinding";
+    type Response = crate::EmptyReturns;
+}
+
 /// This method does not remove binding function from global object but
 /// unsubscribes current runtime agent from Runtime.bindingCalled notifications.
 
@@ -968,6 +1136,13 @@ pub struct AddBindingParams {
 pub struct RemoveBindingParams {
 
     pub name: String,
+}
+
+impl RemoveBindingParams { pub const METHOD: &'static str = "Runtime.removeBinding"; }
+
+impl crate::CdpCommand for RemoveBindingParams {
+    const METHOD: &'static str = "Runtime.removeBinding";
+    type Response = crate::EmptyReturns;
 }
 
 /// This method tries to lookup and populate exception details for a
@@ -996,4 +1171,11 @@ pub struct GetExceptionDetailsReturns {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exceptionDetails: Option<ExceptionDetails>,
+}
+
+impl GetExceptionDetailsParams { pub const METHOD: &'static str = "Runtime.getExceptionDetails"; }
+
+impl crate::CdpCommand for GetExceptionDetailsParams {
+    const METHOD: &'static str = "Runtime.getExceptionDetails";
+    type Response = GetExceptionDetailsReturns;
 }

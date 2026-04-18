@@ -1,10 +1,10 @@
 [package]
 authors = ["AzzoDude"]
-description = "Generated Rust types for js_protocol.json"
+description = "Generated Rust types and commands for the Chrome DevTools Protocol (js-protocol)"
 license = "MIT"
 repository = "https://github.com/AzzoDude/js-protocol"
 name = "js-protocol"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 readme = "README.md"
 keywords = ["cdp", "browser", "automation", "protocol"]
@@ -22,16 +22,13 @@ codegen-units = 1
 panic = "abort"
 strip = true
 
+
 [features]
 default = ["full"]
-full = ["console", "debugger", "dom", "heapprofiler", "network", "page", "profiler", "runtime", "schema", "target"]
+full = ["console", "debugger", "heapprofiler", "profiler", "runtime", "schema"]
 console = []
 debugger = []
-dom = []
 heapprofiler = []
-network = []
-page = []
 profiler = []
 runtime = []
 schema = []
-target = []

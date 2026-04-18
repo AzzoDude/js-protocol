@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use serde_json::Value as JsonValue;
 
 /// Heap snapshot object id.
 
@@ -62,6 +63,43 @@ pub struct AddInspectedHeapObjectParams {
     pub heapObjectId: HeapSnapshotObjectId,
 }
 
+impl AddInspectedHeapObjectParams { pub const METHOD: &'static str = "HeapProfiler.addInspectedHeapObject"; }
+
+impl crate::CdpCommand for AddInspectedHeapObjectParams {
+    const METHOD: &'static str = "HeapProfiler.addInspectedHeapObject";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CollectGarbageParams {}
+
+impl CollectGarbageParams { pub const METHOD: &'static str = "HeapProfiler.collectGarbage"; }
+
+impl crate::CdpCommand for CollectGarbageParams {
+    const METHOD: &'static str = "HeapProfiler.collectGarbage";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DisableParams {}
+
+impl DisableParams { pub const METHOD: &'static str = "HeapProfiler.disable"; }
+
+impl crate::CdpCommand for DisableParams {
+    const METHOD: &'static str = "HeapProfiler.disable";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EnableParams {}
+
+impl EnableParams { pub const METHOD: &'static str = "HeapProfiler.enable"; }
+
+impl crate::CdpCommand for EnableParams {
+    const METHOD: &'static str = "HeapProfiler.enable";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -78,6 +116,13 @@ pub struct GetHeapObjectIdReturns {
     /// Id of the heap snapshot object corresponding to the passed remote object id.
 
     pub heapSnapshotObjectId: HeapSnapshotObjectId,
+}
+
+impl GetHeapObjectIdParams { pub const METHOD: &'static str = "HeapProfiler.getHeapObjectId"; }
+
+impl crate::CdpCommand for GetHeapObjectIdParams {
+    const METHOD: &'static str = "HeapProfiler.getHeapObjectId";
+    type Response = GetHeapObjectIdReturns;
 }
 
 
@@ -101,6 +146,13 @@ pub struct GetObjectByHeapObjectIdReturns {
     pub result: crate::runtime::RemoteObject,
 }
 
+impl GetObjectByHeapObjectIdParams { pub const METHOD: &'static str = "HeapProfiler.getObjectByHeapObjectId"; }
+
+impl crate::CdpCommand for GetObjectByHeapObjectIdParams {
+    const METHOD: &'static str = "HeapProfiler.getObjectByHeapObjectId";
+    type Response = GetObjectByHeapObjectIdReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -108,6 +160,16 @@ pub struct GetSamplingProfileReturns {
     /// Return the sampling profile being collected.
 
     pub profile: SamplingHeapProfile,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct GetSamplingProfileParams {}
+
+impl GetSamplingProfileParams { pub const METHOD: &'static str = "HeapProfiler.getSamplingProfile"; }
+
+impl crate::CdpCommand for GetSamplingProfileParams {
+    const METHOD: &'static str = "HeapProfiler.getSamplingProfile";
+    type Response = GetSamplingProfileReturns;
 }
 
 
@@ -145,6 +207,13 @@ pub struct StartSamplingParams {
     pub includeObjectsCollectedByMinorGC: Option<bool>,
 }
 
+impl StartSamplingParams { pub const METHOD: &'static str = "HeapProfiler.startSampling"; }
+
+impl crate::CdpCommand for StartSamplingParams {
+    const METHOD: &'static str = "HeapProfiler.startSampling";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -154,6 +223,13 @@ pub struct StartTrackingHeapObjectsParams {
     pub trackAllocations: Option<bool>,
 }
 
+impl StartTrackingHeapObjectsParams { pub const METHOD: &'static str = "HeapProfiler.startTrackingHeapObjects"; }
+
+impl crate::CdpCommand for StartTrackingHeapObjectsParams {
+    const METHOD: &'static str = "HeapProfiler.startTrackingHeapObjects";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -161,6 +237,16 @@ pub struct StopSamplingReturns {
     /// Recorded sampling heap profile.
 
     pub profile: SamplingHeapProfile,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StopSamplingParams {}
+
+impl StopSamplingParams { pub const METHOD: &'static str = "HeapProfiler.stopSampling"; }
+
+impl crate::CdpCommand for StopSamplingParams {
+    const METHOD: &'static str = "HeapProfiler.stopSampling";
+    type Response = StopSamplingReturns;
 }
 
 
@@ -186,6 +272,13 @@ pub struct StopTrackingHeapObjectsParams {
     pub exposeInternals: Option<bool>,
 }
 
+impl StopTrackingHeapObjectsParams { pub const METHOD: &'static str = "HeapProfiler.stopTrackingHeapObjects"; }
+
+impl crate::CdpCommand for StopTrackingHeapObjectsParams {
+    const METHOD: &'static str = "HeapProfiler.stopTrackingHeapObjects";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -207,4 +300,11 @@ pub struct TakeHeapSnapshotParams {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exposeInternals: Option<bool>,
+}
+
+impl TakeHeapSnapshotParams { pub const METHOD: &'static str = "HeapProfiler.takeHeapSnapshot"; }
+
+impl crate::CdpCommand for TakeHeapSnapshotParams {
+    const METHOD: &'static str = "HeapProfiler.takeHeapSnapshot";
+    type Response = crate::EmptyReturns;
 }

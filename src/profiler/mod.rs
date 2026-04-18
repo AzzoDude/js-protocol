@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use serde_json::Value as JsonValue;
 
 /// Profile node. Holds callsite information, execution statistics and child nodes.
 
@@ -62,7 +63,7 @@ pub struct Profile {
 pub struct PositionTickInfo {
     /// Source line number (1-based).
 
-    pub line: i32,
+    pub line: i64,
     /// Number of samples attributed to the source line.
 
     pub ticks: i64,
@@ -116,6 +117,26 @@ pub struct ScriptCoverage {
     pub functions: Vec<FunctionCoverage>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DisableParams {}
+
+impl DisableParams { pub const METHOD: &'static str = "Profiler.disable"; }
+
+impl crate::CdpCommand for DisableParams {
+    const METHOD: &'static str = "Profiler.disable";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EnableParams {}
+
+impl EnableParams { pub const METHOD: &'static str = "Profiler.enable"; }
+
+impl crate::CdpCommand for EnableParams {
+    const METHOD: &'static str = "Profiler.enable";
+    type Response = crate::EmptyReturns;
+}
+
 /// Collect coverage data for the current isolate. The coverage data may be incomplete due to
 /// garbage collection.
 
@@ -127,6 +148,16 @@ pub struct GetBestEffortCoverageReturns {
     pub result: Vec<ScriptCoverage>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct GetBestEffortCoverageParams {}
+
+impl GetBestEffortCoverageParams { pub const METHOD: &'static str = "Profiler.getBestEffortCoverage"; }
+
+impl crate::CdpCommand for GetBestEffortCoverageParams {
+    const METHOD: &'static str = "Profiler.getBestEffortCoverage";
+    type Response = GetBestEffortCoverageReturns;
+}
+
 /// Changes CPU profiler sampling interval. Must be called before CPU profiles recording started.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -135,6 +166,23 @@ pub struct SetSamplingIntervalParams {
     /// New sampling interval in microseconds.
 
     pub interval: i64,
+}
+
+impl SetSamplingIntervalParams { pub const METHOD: &'static str = "Profiler.setSamplingInterval"; }
+
+impl crate::CdpCommand for SetSamplingIntervalParams {
+    const METHOD: &'static str = "Profiler.setSamplingInterval";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StartParams {}
+
+impl StartParams { pub const METHOD: &'static str = "Profiler.start"; }
+
+impl crate::CdpCommand for StartParams {
+    const METHOD: &'static str = "Profiler.start";
+    type Response = crate::EmptyReturns;
 }
 
 /// Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code
@@ -170,6 +218,13 @@ pub struct StartPreciseCoverageReturns {
     pub timestamp: f64,
 }
 
+impl StartPreciseCoverageParams { pub const METHOD: &'static str = "Profiler.startPreciseCoverage"; }
+
+impl crate::CdpCommand for StartPreciseCoverageParams {
+    const METHOD: &'static str = "Profiler.startPreciseCoverage";
+    type Response = StartPreciseCoverageReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -177,6 +232,26 @@ pub struct StopReturns {
     /// Recorded profile.
 
     pub profile: Profile,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StopParams {}
+
+impl StopParams { pub const METHOD: &'static str = "Profiler.stop"; }
+
+impl crate::CdpCommand for StopParams {
+    const METHOD: &'static str = "Profiler.stop";
+    type Response = StopReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StopPreciseCoverageParams {}
+
+impl StopPreciseCoverageParams { pub const METHOD: &'static str = "Profiler.stopPreciseCoverage"; }
+
+impl crate::CdpCommand for StopPreciseCoverageParams {
+    const METHOD: &'static str = "Profiler.stopPreciseCoverage";
+    type Response = crate::EmptyReturns;
 }
 
 /// Collect coverage data for the current isolate, and resets execution counters. Precise code
@@ -191,4 +266,14 @@ pub struct TakePreciseCoverageReturns {
     /// Monotonically increasing time (in seconds) when the coverage update was taken in the backend.
 
     pub timestamp: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TakePreciseCoverageParams {}
+
+impl TakePreciseCoverageParams { pub const METHOD: &'static str = "Profiler.takePreciseCoverage"; }
+
+impl crate::CdpCommand for TakePreciseCoverageParams {
+    const METHOD: &'static str = "Profiler.takePreciseCoverage";
+    type Response = TakePreciseCoverageReturns;
 }

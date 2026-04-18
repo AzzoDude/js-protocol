@@ -1,7 +1,8 @@
+use serde::{Serialize, Deserialize};
+use serde_json::Value as JsonValue;
+
 //! Debugger domain exposes JavaScript debugging capabilities. It allows setting and removing
 //! breakpoints, stepping through execution, exploring stack traces, etc.
-
-use serde::{Serialize, Deserialize};
 
 /// Breakpoint identifier.
 
@@ -215,6 +216,23 @@ pub struct ContinueToLocationParams {
     pub targetCallFrames: Option<String>,
 }
 
+impl ContinueToLocationParams { pub const METHOD: &'static str = "Debugger.continueToLocation"; }
+
+impl crate::CdpCommand for ContinueToLocationParams {
+    const METHOD: &'static str = "Debugger.continueToLocation";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DisableParams {}
+
+impl DisableParams { pub const METHOD: &'static str = "Debugger.disable"; }
+
+impl crate::CdpCommand for DisableParams {
+    const METHOD: &'static str = "Debugger.disable";
+    type Response = crate::EmptyReturns;
+}
+
 /// Enables debugger for the given page. Clients should not assume that the debugging has been
 /// enabled until the result for this command is received.
 
@@ -237,6 +255,13 @@ pub struct EnableReturns {
     /// Unique identifier of the debugger.
 
     pub debuggerId: crate::runtime::UniqueDebuggerId,
+}
+
+impl EnableParams { pub const METHOD: &'static str = "Debugger.enable"; }
+
+impl crate::CdpCommand for EnableParams {
+    const METHOD: &'static str = "Debugger.enable";
+    type Response = EnableReturns;
 }
 
 /// Evaluates expression on a given call frame.
@@ -297,6 +322,13 @@ pub struct EvaluateOnCallFrameReturns {
     pub exceptionDetails: Option<crate::runtime::ExceptionDetails>,
 }
 
+impl EvaluateOnCallFrameParams { pub const METHOD: &'static str = "Debugger.evaluateOnCallFrame"; }
+
+impl crate::CdpCommand for EvaluateOnCallFrameParams {
+    const METHOD: &'static str = "Debugger.evaluateOnCallFrame";
+    type Response = EvaluateOnCallFrameReturns;
+}
+
 /// Returns possible locations for breakpoint. scriptId in start and end range locations should be
 /// the same.
 
@@ -328,6 +360,13 @@ pub struct GetPossibleBreakpointsReturns {
     pub locations: Vec<BreakLocation>,
 }
 
+impl GetPossibleBreakpointsParams { pub const METHOD: &'static str = "Debugger.getPossibleBreakpoints"; }
+
+impl crate::CdpCommand for GetPossibleBreakpointsParams {
+    const METHOD: &'static str = "Debugger.getPossibleBreakpoints";
+    type Response = GetPossibleBreakpointsReturns;
+}
+
 /// Returns source for the script with given id.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -352,6 +391,13 @@ pub struct GetScriptSourceReturns {
     pub bytecode: Option<String>,
 }
 
+impl GetScriptSourceParams { pub const METHOD: &'static str = "Debugger.getScriptSource"; }
+
+impl crate::CdpCommand for GetScriptSourceParams {
+    const METHOD: &'static str = "Debugger.getScriptSource";
+    type Response = GetScriptSourceReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -373,13 +419,20 @@ pub struct DisassembleWasmModuleReturns {
     /// The total number of lines in the disassembly text.
 
     pub totalNumberOfLines: i64,
-    /// The offsets of all function bodies, in the format \[start1, end1,
-    /// start2, end2, ...\] where all ends are exclusive.
+    /// The offsets of all function bodies, in the format [start1, end1,
+    /// start2, end2, ...] where all ends are exclusive.
 
     pub functionBodyOffsets: Vec<i64>,
     /// The first chunk of disassembly.
 
     pub chunk: WasmDisassemblyChunk,
+}
+
+impl DisassembleWasmModuleParams { pub const METHOD: &'static str = "Debugger.disassembleWasmModule"; }
+
+impl crate::CdpCommand for DisassembleWasmModuleParams {
+    const METHOD: &'static str = "Debugger.disassembleWasmModule";
+    type Response = DisassembleWasmModuleReturns;
 }
 
 /// Disassemble the next chunk of lines for the module corresponding to the
@@ -407,6 +460,13 @@ pub struct NextWasmDisassemblyChunkReturns {
     pub chunk: WasmDisassemblyChunk,
 }
 
+impl NextWasmDisassemblyChunkParams { pub const METHOD: &'static str = "Debugger.nextWasmDisassemblyChunk"; }
+
+impl crate::CdpCommand for NextWasmDisassemblyChunkParams {
+    const METHOD: &'static str = "Debugger.nextWasmDisassemblyChunk";
+    type Response = NextWasmDisassemblyChunkReturns;
+}
+
 /// This command is deprecated. Use getScriptSource instead.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -427,6 +487,13 @@ pub struct GetWasmBytecodeReturns {
     pub bytecode: String,
 }
 
+impl GetWasmBytecodeParams { pub const METHOD: &'static str = "Debugger.getWasmBytecode"; }
+
+impl crate::CdpCommand for GetWasmBytecodeParams {
+    const METHOD: &'static str = "Debugger.getWasmBytecode";
+    type Response = GetWasmBytecodeReturns;
+}
+
 /// Returns stack trace with given 'stackTraceId'.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -445,6 +512,23 @@ pub struct GetStackTraceReturns {
     pub stackTrace: crate::runtime::StackTrace,
 }
 
+impl GetStackTraceParams { pub const METHOD: &'static str = "Debugger.getStackTrace"; }
+
+impl crate::CdpCommand for GetStackTraceParams {
+    const METHOD: &'static str = "Debugger.getStackTrace";
+    type Response = GetStackTraceReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PauseParams {}
+
+impl PauseParams { pub const METHOD: &'static str = "Debugger.pause"; }
+
+impl crate::CdpCommand for PauseParams {
+    const METHOD: &'static str = "Debugger.pause";
+    type Response = crate::EmptyReturns;
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -454,6 +538,13 @@ pub struct PauseOnAsyncCallParams {
     pub parentStackTraceId: crate::runtime::StackTraceId,
 }
 
+impl PauseOnAsyncCallParams { pub const METHOD: &'static str = "Debugger.pauseOnAsyncCall"; }
+
+impl crate::CdpCommand for PauseOnAsyncCallParams {
+    const METHOD: &'static str = "Debugger.pauseOnAsyncCall";
+    type Response = crate::EmptyReturns;
+}
+
 /// Removes JavaScript breakpoint.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -461,6 +552,13 @@ pub struct PauseOnAsyncCallParams {
 pub struct RemoveBreakpointParams {
 
     pub breakpointId: BreakpointId,
+}
+
+impl RemoveBreakpointParams { pub const METHOD: &'static str = "Debugger.removeBreakpoint"; }
+
+impl crate::CdpCommand for RemoveBreakpointParams {
+    const METHOD: &'static str = "Debugger.removeBreakpoint";
+    type Response = crate::EmptyReturns;
 }
 
 /// Restarts particular call frame from the beginning. The old, deprecated
@@ -520,6 +618,13 @@ pub struct RestartFrameReturns {
     pub asyncStackTraceId: Option<crate::runtime::StackTraceId>,
 }
 
+impl RestartFrameParams { pub const METHOD: &'static str = "Debugger.restartFrame"; }
+
+impl crate::CdpCommand for RestartFrameParams {
+    const METHOD: &'static str = "Debugger.restartFrame";
+    type Response = RestartFrameReturns;
+}
+
 /// Resumes JavaScript execution.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -533,6 +638,13 @@ pub struct ResumeParams {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub terminateOnResume: Option<bool>,
+}
+
+impl ResumeParams { pub const METHOD: &'static str = "Debugger.resume"; }
+
+impl crate::CdpCommand for ResumeParams {
+    const METHOD: &'static str = "Debugger.resume";
+    type Response = crate::EmptyReturns;
 }
 
 /// Searches for given string in script content.
@@ -566,6 +678,13 @@ pub struct SearchInContentReturns {
     pub result: Vec<SearchMatch>,
 }
 
+impl SearchInContentParams { pub const METHOD: &'static str = "Debugger.searchInContent"; }
+
+impl crate::CdpCommand for SearchInContentParams {
+    const METHOD: &'static str = "Debugger.searchInContent";
+    type Response = SearchInContentReturns;
+}
+
 /// Enables or disables async call stacks tracking.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -575,6 +694,13 @@ pub struct SetAsyncCallStackDepthParams {
     /// call stacks (default).
 
     pub maxDepth: i64,
+}
+
+impl SetAsyncCallStackDepthParams { pub const METHOD: &'static str = "Debugger.setAsyncCallStackDepth"; }
+
+impl crate::CdpCommand for SetAsyncCallStackDepthParams {
+    const METHOD: &'static str = "Debugger.setAsyncCallStackDepth";
+    type Response = crate::EmptyReturns;
 }
 
 /// Replace previous blackbox execution contexts with passed ones. Forces backend to skip
@@ -587,6 +713,13 @@ pub struct SetBlackboxExecutionContextsParams {
     /// Array of execution context unique ids for the debugger to ignore.
 
     pub uniqueIds: Vec<String>,
+}
+
+impl SetBlackboxExecutionContextsParams { pub const METHOD: &'static str = "Debugger.setBlackboxExecutionContexts"; }
+
+impl crate::CdpCommand for SetBlackboxExecutionContextsParams {
+    const METHOD: &'static str = "Debugger.setBlackboxExecutionContexts";
+    type Response = crate::EmptyReturns;
 }
 
 /// Replace previous blackbox patterns with passed ones. Forces backend to skip stepping/pausing in
@@ -605,6 +738,13 @@ pub struct SetBlackboxPatternsParams {
     pub skipAnonymous: Option<bool>,
 }
 
+impl SetBlackboxPatternsParams { pub const METHOD: &'static str = "Debugger.setBlackboxPatterns"; }
+
+impl crate::CdpCommand for SetBlackboxPatternsParams {
+    const METHOD: &'static str = "Debugger.setBlackboxPatterns";
+    type Response = crate::EmptyReturns;
+}
+
 /// Makes backend skip steps in the script in blackboxed ranges. VM will try leave blacklisted
 /// scripts by performing 'step in' several times, finally resorting to 'step out' if unsuccessful.
 /// Positions array contains positions where blackbox state is changed. First interval isn't
@@ -618,6 +758,13 @@ pub struct SetBlackboxedRangesParams {
     pub scriptId: crate::runtime::ScriptId,
 
     pub positions: Vec<ScriptPosition>,
+}
+
+impl SetBlackboxedRangesParams { pub const METHOD: &'static str = "Debugger.setBlackboxedRanges"; }
+
+impl crate::CdpCommand for SetBlackboxedRangesParams {
+    const METHOD: &'static str = "Debugger.setBlackboxedRanges";
+    type Response = crate::EmptyReturns;
 }
 
 /// Sets JavaScript breakpoint at a given location.
@@ -648,6 +795,13 @@ pub struct SetBreakpointReturns {
     pub actualLocation: Location,
 }
 
+impl SetBreakpointParams { pub const METHOD: &'static str = "Debugger.setBreakpoint"; }
+
+impl crate::CdpCommand for SetBreakpointParams {
+    const METHOD: &'static str = "Debugger.setBreakpoint";
+    type Response = SetBreakpointReturns;
+}
+
 /// Sets instrumentation breakpoint.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -666,6 +820,13 @@ pub struct SetInstrumentationBreakpointReturns {
     /// Id of the created breakpoint for further reference.
 
     pub breakpointId: BreakpointId,
+}
+
+impl SetInstrumentationBreakpointParams { pub const METHOD: &'static str = "Debugger.setInstrumentationBreakpoint"; }
+
+impl crate::CdpCommand for SetInstrumentationBreakpointParams {
+    const METHOD: &'static str = "Debugger.setInstrumentationBreakpoint";
+    type Response = SetInstrumentationBreakpointReturns;
 }
 
 /// Sets JavaScript breakpoint at given location specified either by URL or URL regex. Once this
@@ -719,6 +880,13 @@ pub struct SetBreakpointByUrlReturns {
     pub locations: Vec<Location>,
 }
 
+impl SetBreakpointByUrlParams { pub const METHOD: &'static str = "Debugger.setBreakpointByUrl"; }
+
+impl crate::CdpCommand for SetBreakpointByUrlParams {
+    const METHOD: &'static str = "Debugger.setBreakpointByUrl";
+    type Response = SetBreakpointByUrlReturns;
+}
+
 /// Sets JavaScript breakpoint before each call to the given function.
 /// If another function was created from the same source as a given one,
 /// calling it will also trigger the breakpoint.
@@ -748,6 +916,13 @@ pub struct SetBreakpointOnFunctionCallReturns {
     pub breakpointId: BreakpointId,
 }
 
+impl SetBreakpointOnFunctionCallParams { pub const METHOD: &'static str = "Debugger.setBreakpointOnFunctionCall"; }
+
+impl crate::CdpCommand for SetBreakpointOnFunctionCallParams {
+    const METHOD: &'static str = "Debugger.setBreakpointOnFunctionCall";
+    type Response = SetBreakpointOnFunctionCallReturns;
+}
+
 /// Activates / deactivates all breakpoints on the page.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -756,6 +931,13 @@ pub struct SetBreakpointsActiveParams {
     /// New value for breakpoints active state.
 
     pub active: bool,
+}
+
+impl SetBreakpointsActiveParams { pub const METHOD: &'static str = "Debugger.setBreakpointsActive"; }
+
+impl crate::CdpCommand for SetBreakpointsActiveParams {
+    const METHOD: &'static str = "Debugger.setBreakpointsActive";
+    type Response = crate::EmptyReturns;
 }
 
 /// Defines pause on exceptions state. Can be set to stop on all exceptions, uncaught exceptions,
@@ -769,6 +951,13 @@ pub struct SetPauseOnExceptionsParams {
     pub state: String,
 }
 
+impl SetPauseOnExceptionsParams { pub const METHOD: &'static str = "Debugger.setPauseOnExceptions"; }
+
+impl crate::CdpCommand for SetPauseOnExceptionsParams {
+    const METHOD: &'static str = "Debugger.setPauseOnExceptions";
+    type Response = crate::EmptyReturns;
+}
+
 /// Changes return value in top frame. Available only at return break position.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -777,6 +966,13 @@ pub struct SetReturnValueParams {
     /// New return value.
 
     pub newValue: crate::runtime::CallArgument,
+}
+
+impl SetReturnValueParams { pub const METHOD: &'static str = "Debugger.setReturnValue"; }
+
+impl crate::CdpCommand for SetReturnValueParams {
+    const METHOD: &'static str = "Debugger.setReturnValue";
+    type Response = crate::EmptyReturns;
 }
 
 /// Edits JavaScript source live.
@@ -846,6 +1042,13 @@ pub struct SetScriptSourceReturns {
     pub exceptionDetails: Option<crate::runtime::ExceptionDetails>,
 }
 
+impl SetScriptSourceParams { pub const METHOD: &'static str = "Debugger.setScriptSource"; }
+
+impl crate::CdpCommand for SetScriptSourceParams {
+    const METHOD: &'static str = "Debugger.setScriptSource";
+    type Response = SetScriptSourceReturns;
+}
+
 /// Makes page not interrupt on any pauses (breakpoint, exception, dom exception etc).
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -854,6 +1057,13 @@ pub struct SetSkipAllPausesParams {
     /// New value for skip pauses state.
 
     pub skip: bool,
+}
+
+impl SetSkipAllPausesParams { pub const METHOD: &'static str = "Debugger.setSkipAllPauses"; }
+
+impl crate::CdpCommand for SetSkipAllPausesParams {
+    const METHOD: &'static str = "Debugger.setSkipAllPauses";
+    type Response = crate::EmptyReturns;
 }
 
 /// Changes value of variable in a callframe. Object-based scopes are not supported and must be
@@ -877,6 +1087,13 @@ pub struct SetVariableValueParams {
     pub callFrameId: CallFrameId,
 }
 
+impl SetVariableValueParams { pub const METHOD: &'static str = "Debugger.setVariableValue"; }
+
+impl crate::CdpCommand for SetVariableValueParams {
+    const METHOD: &'static str = "Debugger.setVariableValue";
+    type Response = crate::EmptyReturns;
+}
+
 /// Steps into the function call.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -893,6 +1110,23 @@ pub struct StepIntoParams {
     pub skipList: Option<Vec<LocationRange>>,
 }
 
+impl StepIntoParams { pub const METHOD: &'static str = "Debugger.stepInto"; }
+
+impl crate::CdpCommand for StepIntoParams {
+    const METHOD: &'static str = "Debugger.stepInto";
+    type Response = crate::EmptyReturns;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StepOutParams {}
+
+impl StepOutParams { pub const METHOD: &'static str = "Debugger.stepOut"; }
+
+impl crate::CdpCommand for StepOutParams {
+    const METHOD: &'static str = "Debugger.stepOut";
+    type Response = crate::EmptyReturns;
+}
+
 /// Steps over the statement.
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -902,4 +1136,11 @@ pub struct StepOverParams {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skipList: Option<Vec<LocationRange>>,
+}
+
+impl StepOverParams { pub const METHOD: &'static str = "Debugger.stepOver"; }
+
+impl crate::CdpCommand for StepOverParams {
+    const METHOD: &'static str = "Debugger.stepOver";
+    type Response = crate::EmptyReturns;
 }
