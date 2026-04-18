@@ -14,6 +14,9 @@ dependencies_rs: dict[str, str] = {
     "serde_json": ""
 }
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
 def to_camel_case(snake_str):
     components = snake_str.replace('-', '_').split('_')
     return "".join(x[:1].upper() + x[1:] for x in components if x)
@@ -62,14 +65,13 @@ def get_rust_type(prop, current_struct_name=None):
     return base_type
 
 def generate_cdp_modules(project_name: str):
-    json_path = "js_protocol.json" # Default for js-protocol
-    parent_json = os.path.join("..", "js_protocol.json")
-    if os.path.exists(parent_json): json_path = parent_json
+    # Changed: use PROJECT_ROOT
+    json_path = os.path.join(PROJECT_ROOT, "js_protocol.json")
     
     with open(json_path, "r", encoding="utf-8") as f:
         schema = json.load(f)
 
-    project_path = ".."
+    project_path = PROJECT_ROOT
     src_dir = os.path.join(project_path, "src")
     lib_rs_content = [
         "#![allow(non_snake_case)]", "#![allow(unused_imports)]", "#![allow(dead_code)]", "",
@@ -107,9 +109,18 @@ def generate_cdp_modules(project_name: str):
         domain_dir = os.path.join(src_dir, d_name.lower())
         os.makedirs(domain_dir, exist_ok=True)
         
+        # Use a list for the full module content
+        mod_header = []
+        if "description" in domain:
+            mod_header.append(format_rustdoc(domain['description'], 0, True).strip())
+        
+        mod_header.extend([
+            "use serde::{Serialize, Deserialize};",
+            "use serde_json::Value as JsonValue;",
+            "" # Empty line after imports
+        ])
+        
         mod_body = []
-        if "description" in domain: mod_body.append(format_rustdoc(domain['description'], 0, True))
-
         for t in domain.get("types", []):
             mod_body.append(format_rustdoc(t.get("description"), 0))
             t_id = t.get("id")
@@ -172,14 +183,14 @@ def generate_cdp_modules(project_name: str):
             else: mod_body.append("    type Response = crate::EmptyReturns;")
             mod_body.append("}\n")
 
-        mod_code = ["use serde::{Serialize, Deserialize};", "use serde_json::Value as JsonValue;", "", "\n".join(mod_body)]
-        with open(os.path.join(domain_dir, "mod.rs"), "w", encoding="utf-8") as f: f.write("\n".join(mod_code))
+        full_mod_code = "\n".join(mod_header) + "\n" + "\n".join(mod_body)
+        with open(os.path.join(domain_dir, "mod.rs"), "w", encoding="utf-8") as f: f.write(full_mod_code)
 
     with open(os.path.join(src_dir, "lib.rs"), "w", encoding="utf-8") as f:
         f.write("\n".join(lib_rs_content))
 
 def update_cargo_metadata(project_name):
-    project_path = ".."
+    project_path = PROJECT_ROOT
     path = os.path.join(project_path, "Cargo.toml")
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -223,7 +234,7 @@ def update_cargo_metadata(project_name):
             if key not in added_metadata: new_lines.append(f"{key} = {value}")
 
     # Feature generation logic (specifically for js_protocol.json)
-    json_path = os.path.join("..", "js_protocol.json")
+    json_path = os.path.join(PROJECT_ROOT, "js_protocol.json")
     if os.path.exists(json_path):
         with open(json_path, "r", encoding="utf-8") as f: schema = json.load(f)
         domains = [d.get("domain").lower() for d in schema.get("domains", [])]

@@ -1,8 +1,7 @@
-use serde::{Serialize, Deserialize};
-use serde_json::Value as JsonValue;
-
 //! Debugger domain exposes JavaScript debugging capabilities. It allows setting and removing
 //! breakpoints, stepping through execution, exploring stack traces, etc.
+use serde::{Serialize, Deserialize};
+use serde_json::Value as JsonValue;
 
 /// Breakpoint identifier.
 

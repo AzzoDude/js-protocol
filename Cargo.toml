@@ -23,6 +23,7 @@ panic = "abort"
 strip = true
 
 
+
 [features]
 default = ["full"]
 full = ["console", "debugger", "heapprofiler", "profiler", "runtime", "schema"]

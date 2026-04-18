@@ -1,7 +1,6 @@
+//! This domain is deprecated - use Runtime or Log instead.
 use serde::{Serialize, Deserialize};
 use serde_json::Value as JsonValue;
-
-//! This domain is deprecated - use Runtime or Log instead.
 
 /// Console message.
 
