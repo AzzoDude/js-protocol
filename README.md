@@ -8,109 +8,260 @@ A high-performance, zero-allocation, fully compile-safe Rust representation of t
 
 ---
 
-## 🚀 Key Design Goals & Features
+## Design Goals and Features
 
-Most auto-generated CDP crates output raw, unidiomatic APIs with substantial runtime allocation overhead. This library is designed from the ground up to solve these issues:
+Most auto-generated CDP crates expose raw, unidiomatic APIs with substantial runtime allocation overhead. This library is designed from the ground up to solve those problems.
 
-### 1. Idiomatic Rust Naming Conventions
-* All generated struct fields, getters, and builder setter methods are translated from the protocol's raw `camelCase` to standard Rust `snake_case` (e.g., `executionContextId` becomes `execution_context_id`, and `objectGroup` becomes `object_group`).
-* Standard `#[serde(rename = "...")]` attributes ensure the serialized JSON wire protocol matches the exact formats required by Chrome.
+### 1. Idiomatic Rust naming
 
-### 2. Zero-Copy String Management
-* Utilizes `Cow<'a, str>` instead of allocating heap memory (`String`) for string properties. 
-* String arguments in builders use `impl Into<Cow<'a, str>>`, allowing you to pass static string literals (`&str`) or owned strings without unnecessary heap allocations.
+All generated fields, getters, and builder setters are translated from the protocol's raw `camelCase` to standard Rust `snake_case` (for example, `executionContextId` becomes `execution_context_id` and `objectGroup` becomes `object_group`). `#[serde(rename = "...")]` attributes ensure the serialized JSON matches the exact wire format Chrome expects.
 
-### 3. Compile-Time Argument Safety
-* The builder pattern differentiates between **required** and **optional** parameters. Required parameters are passed directly as arguments to the `builder(...)` function, guaranteeing protocol compliance at compile time:
-  ```rust
-  // `expression` is required (passed to builder), `silent` is optional (chained)
-  let params = EvaluateParams::builder("1 + 1")
-      .silent(true)
-      .build();
-  ```
+### 2. Zero-copy string handling
 
-### 4. Zero Dependencies & No Async Runtime Lock-in
-* Contains **zero bloated dependencies** (depends only on `serde` and `serde_json`).
-* Does not include a WebSocket client or force a specific async runtime (like `tokio`). This keeps the package extremely lightweight, compile-fast, and compatible with any async runtime or network stack.
+String properties use `Cow<'a, str>` instead of allocating a `String`. Builder arguments use `impl Into<...>`, so you can pass static string literals (`&str`) or owned strings without unnecessary heap allocations.
+
+### 3. Compile-time argument safety
+
+The builder pattern separates required from optional parameters. Required parameters are passed directly to `builder(...)`, so protocol compliance is checked at compile time:
+
+```rust
+// `expression` is required (passed to builder); `silent` is optional (chained).
+let params = EvaluateParams::builder("1 + 1")
+    .silent(true)
+    .build();
+```
+
+### 4. Proc-macro powered, minimal boilerplate
+
+Getters, builders, command glue, and event glue are all synthesized by derives from `js-protocol-macros`, so the generated source is limited to plain struct definitions. This removes roughly 60% of the generated source compared to hand-written builders and getters, while still exposing every typed command and event. Runtime dependencies remain limited to `serde` and `serde_json`.
+
+### 5. No async runtime lock-in
+
+The crate includes no WebSocket client and does not require a specific async runtime. It is compatible with any runtime or network stack.
 
 ---
 
-## 📦 Installation
-
-Add this to your `Cargo.toml`:
+## Installation
 
 ```toml
 [dependencies]
-js-protocol = { version = "0.1.3", features = ["full"] }
+js-protocol = { version = "0.1.6", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ```
 
 ---
 
-## 🛠 Usage Examples
+## Usage
 
-### 1. Constructing a Request with Optional Parameters
+### 1. Constructing a request with optional parameters
+
 ```rust
 use js_protocol::runtime::EvaluateParams;
 
 fn main() {
-    // 1. Build the command parameters
+    // Build the command parameters.
     let params = EvaluateParams::builder("console.log('Hello from Rust!')")
         .silent(true)
         .build();
-    
-    // 2. Read-only getters
+
+    // Read-only getters.
     println!("Expression to run: {}", params.expression());
-    
-    // 3. Serialize to wire protocol payload (skips unset Option fields)
+
+    // Serialize to the wire protocol payload (unset Option fields are skipped).
     let payload = serde_json::to_string(&params).unwrap();
     println!("Payload: {}", payload);
     // Output: {"expression":"console.log('Hello from Rust!')","silent":true}
 }
 ```
 
-### 2. Handling Command Request/Response Types
-Every parameter struct implements `crate::CdpCommand<'a>` which binds it to its command method and its corresponding response (`Returns`) type:
+### 2. Handling command request and response types
+
+Every parameter struct implements `crate::CdpCommand<'a>`, which binds it to its command method and its corresponding response type:
 
 ```rust
-use js_protocol::runtime::{EvaluateParams, EvaluateReturns};
+use js_protocol::runtime::CallFunctionOnParams;
 use js_protocol::CdpCommand;
 
-fn evaluate_js() {
-    let params = EvaluateParams::builder("1 + 2").build();
+fn call_function() {
+    let params = CallFunctionOnParams::builder("function() { return this; }")
+        .object_id("object-1")
+        .build();
 
-    // The trait binds this command to its method name and response type:
-    assert_eq!(EvaluateParams::METHOD, "Runtime.evaluate");
-    
+    // The trait binds this command to its method name and response type.
+    assert_eq!(CallFunctionOnParams::METHOD, "Runtime.callFunctionOn");
+
     // In your network client:
-    // let response_json = websocket.send_command(EvaluateParams::METHOD, &params).await;
-    // let response: EvaluateReturns = serde_json::from_str(&response_json).unwrap();
+    // let response_json = websocket.send_command(CallFunctionOnParams::METHOD, &params).await;
+    // let response: CallFunctionOnReturns = serde_json::from_str(&response_json).unwrap();
+}
+```
+
+### 3. A generic client helper
+
+Because every command implements `CdpCommand`, a single pair of helpers covers all of them:
+
+```rust
+use serde::{de::DeserializeOwned, Serialize};
+use js_protocol::{CdpCommand, Command, Response};
+
+fn encode<'a, P: CdpCommand<'a> + Serialize>(id: u64, params: &'a P) -> String {
+    serde_json::to_string(&Command::new(id, params)).unwrap()
+}
+
+fn decode<'a, P>(json: &'a str) -> Response<P::Response>
+where
+    P: CdpCommand<'a>,
+    P::Response: DeserializeOwned,
+{
+    serde_json::from_str(json).unwrap()
 }
 ```
 
 ---
 
-## 🏗 Code Generation Mechanics
+## The Derive Macros
 
-The code is dynamically compiled using a custom Python script that performs advanced schema analysis:
+Three derives from `js-protocol-macros` keep every generated type down to a plain struct declaration.
 
-1. **Fixed-Point Lifetime Propagation Pass**: The generator performs iterative analysis over the CDP types to detect circular type references, nesting, and dependency hierarchies. It automatically determines which types must have a lifetime parameter (`<'a>`) and wraps recursive structures inside `Box` to prevent infinite-size compilation errors.
-2. **HTML/Markdown Escaping**: Schema documentation from the Chrome DevTools Protocol contains raw markdown and HTML brackets. The generator cleans and escapes these brackets into valid Rustdoc format, keeping compilation entirely warning-free.
-3. **Domain-Specific Feature Flags**: Every CDP domain is represented by a Rust feature flag. You can optimize compile times by only compiling the domains your project needs:
-   ```toml
-   # Compile only the runtime and debugger domains
-   js-protocol = { version = "0.1.3", default-features = false, features = ["runtime", "debugger"] }
-   ```
+### `CdpBuilder` - builders and getters
 
-### Regenerating the Code
-To regenerate the Rust modules from a local protocol file:
-```bash
-python scripts/generate_rust_code.py --name js-protocol
+Every generated type derives `CdpBuilder`, which emits:
+
+* A `builder(...)` constructor where every non-`Option` field is a required argument (typed as `impl Into<FieldType>`).
+* Chainable setters for every `Option` field, wrapping the value in `Some`.
+* A `build()` method that moves the accumulated fields into the struct.
+* Read-only getters whose return type is chosen from the field type:
+
+  | Field type | Getter return |
+  | --- | --- |
+  | `Cow<'a, str>` / `Option<Cow<'a, str>>` | `&str` / `Option<&str>` |
+  | `Vec<T>` / `Option<Vec<T>>` | `&[T]` / `Option<&[T]>` |
+  | `Box<T>` / `Option<Box<T>>` | `&T` / `Option<&T>` |
+  | numeric / `bool` primitives | the value itself (they are `Copy`) |
+  | any other type `T` | `&T` / `Option<&T>` |
+
+### `CdpCommand` - command glue
+
+A command's parameter struct carries its method name and response type instead of a hand-written `impl`:
+
+```rust
+#[derive(CdpBuilder, CdpCommand)]
+#[cdp(method = "Runtime.evaluate", response = "EvaluateReturns<'a>")]
+pub struct EvaluateParams<'a> { /* fields */ }
+```
+
+This generates `EvaluateParams::METHOD` and the `CdpCommand<'a>` implementation. If `response` is omitted, the reply type defaults to `crate::EmptyReturns`.
+
+### `CdpEvent` - typed events
+
+Every event in the schema becomes a typed struct with the same builder and getters:
+
+```rust
+#[derive(CdpBuilder, CdpEvent)]
+#[cdp(method = "Runtime.consoleAPICalled")]
+pub struct ConsoleAPICalled<'a> { /* fields */ }
+
+assert_eq!(ConsoleAPICalled::METHOD, "Runtime.consoleAPICalled");
+```
+
+The `CdpEvent` trait exposes `METHOD`, so events can be handled generically rather than by matching raw JSON.
+
+### Error-aware replies
+
+`Response<T>` decodes `{"id", "result"}`. For the failure path, `CdpReply<T>` decodes either shape:
+
+```rust
+match serde_json::from_str::<CdpReply<EvaluateReturns>>(raw)? {
+    CdpReply::Ok(reply) => use_result(reply.result.result()),
+    CdpReply::Err(err) => eprintln!("CDP {}: {}", err.error.code, err.error.message),
+}
 ```
 
 ---
 
-## ⚖ License
+## Code Generation
+
+The code is generated by a single Python script that performs schema analysis:
+
+1. **Fixed-point lifetime propagation**: The generator iteratively analyzes types, command parameters/returns, and events to detect circular references, nesting, and dependency hierarchies. It determines which types require a lifetime parameter (`<'a>`) and wraps recursive structures in `Box` to prevent infinite-size compile errors.
+2. **HTML and Markdown escaping**: Schema documentation contains raw Markdown and HTML brackets. The generator escapes them into valid rustdoc, keeping compilation warning-free.
+3. **Per-domain feature flags**: Every JavaScript protocol domain is a Rust feature. You can limit compile times to the domains you need:
+
+   ```toml
+   # Compile only the runtime and debugger domains.
+   js-protocol = { version = "0.1.6", default-features = false, features = ["runtime", "debugger"] }
+   ```
+
+### Keeping the protocol up to date
+
+```bash
+# Exit code 0 = up to date, 1 = a newer protocol is available.
+python scripts/generate_rust_code.py --check
+
+# Download the latest protocol and regenerate everything.
+python scripts/generate_rust_code.py --download
+```
+
+### Regenerating the code
+
+`--download` is optional; if a local `js_protocol.json` is present it is used as-is.
+
+```bash
+python scripts/generate_rust_code.py --version 0.1.6
+```
+
+---
+
+## Development
+
+```bash
+cargo build --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+```
+
+Lint policy is defined in the workspace `Cargo.toml` (`[workspace.lints]`) and `clippy.toml`. Clippy warnings are treated as errors in CI. A small set of lints that are not meaningful for generated code (`empty_line_after_doc_comments`, `doc_lazy_continuation`, and `vec_box`) is allowed explicitly; everything else is held to the default Clippy standard.
+
+### Releasing
+
+Versions are kept in lockstep by the generator, and releases are cut from a tag:
+
+```bash
+# 1. Bump every version reference at once (both Cargo.toml files, the macros pin, README).
+python scripts/generate_rust_code.py --version 0.1.6
+
+# 2. Verify.
+cargo test --workspace --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+python scripts/publish.py --dry-run
+
+# 3. Commit, tag, push. The tag triggers .github/workflows/release.yml.
+git add -A
+git commit -m "Release v0.1.6"
+git tag v0.1.6
+git push origin main
+git push origin v0.1.6
+```
+
+The release workflow runs the build/test/clippy gates and then `scripts/publish.py`, which publishes `js-protocol-macros` before `js-protocol` and skips any version already on crates.io, so a partially failed run can be re-run safely. Publishing uses crates.io trusted publishing; both crates must have a trusted publisher configured for this repository and the `release.yml` workflow.
+
+---
+
+## Repository Layout
+
+```
+js-protocol/               # The crate: generated modules + CdpCommand / CdpEvent traits
+  src/<domain>/mod.rs      # One module per CDP domain
+  scripts/
+    generate_rust_code.py  # Schema analysis and code generation
+  macros/                  # js-protocol-macros: CdpBuilder / CdpCommand / CdpEvent derives
+```
+
+> **Publishing note:** `js-protocol` depends on `js-protocol-macros`, so the macros crate must be published to crates.io first.
+
+---
+
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
